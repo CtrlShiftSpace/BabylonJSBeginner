@@ -123,6 +123,44 @@ const createScene = async function(engine) {
     // 將鋼琴物件往y移動
     keyboard.position.y += 80;
 
+    // 觀察事件
+    const pointerToKey = new Map();
+    const pianoSound = await Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano');
+    scene.onPointerObservable.add((pointerInfo) => {
+        switch(pointerInfo.type){
+            case BABYLON.PointerEventTypes.POINTERDOWN:
+                if (pointerInfo.pickInfo.hit){
+                    // 點擊到的mesh物件
+                    const pickedMesh = pointerInfo.pickInfo.pickedMesh;
+                    // 點擊到的mesh id，其值唯一，做為指標用
+                    const pointerId  = pointerInfo.pickInfo.pointerId;
+                    // 檢查點擊物件
+                    if (pickedMesh.parent === keyboard) {
+                        // 壓下去的位移量
+                        pickedMesh.position.y -= 0.5;
+                        // 儲存點擊的id資訊
+                        pointerToKey.set(pointerId, {
+                            mesh: pickedMesh,
+                            // 依照note name撥放
+                            note: pianoSound.play(pointerInfo.pickInfo.pickedMesh.name)
+                        });
+                    }
+                }
+                break;
+
+            case BABYLON.PointerEventTypes.POINTERUP:
+                // 放開的mesh id，其值唯一，做為指標用
+                const pointerId  = pointerInfo.pickInfo.pointerId;
+                if (pointerToKey.has(pointerId)){
+                    pointerToKey.get(pointerId).mesh.position.y += 0.5;
+                    // 釋放點擊的id
+                    pointerToKey.delete(pointerId);
+                }
+
+                break;
+        }
+    });
+
     const xrHelper = await scene.createDefaultXRExperienceAsync();
 
     return scene;
