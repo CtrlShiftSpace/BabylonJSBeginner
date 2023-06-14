@@ -29,6 +29,23 @@
                 const box = BABYLON.MeshBuilder.CreateBox("box", {});
                 box.position.x = 0.5;
                 box.position.y = 1;
+                // 設定立方體材質，顏色設為隨機
+                const boxMaterial = new BABYLON.StandardMaterial("material", scene);
+                boxMaterial.diffuseColor = BABYLON.Color3.Random();
+                box.material = boxMaterial;
+                // 立方體互動處理
+                box.actionManager = new BABYLON.ActionManager(scene);
+                // 點擊到立方體物件事件
+                box.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPickTrigger,
+                    function (evt){
+                        const sourceBox = evt.meshUnderPointer;
+                        // 移動立方體位置
+                        sourceBox.position.x += 0.1;
+                        sourceBox.position.y += 0.1;
+                        // 變更顏色
+                        boxMaterial.diffuseColor = BABYLON.Color3.Random();
+                    }));
 
                 // 定義攝影機參數
                 const alpha = Math.PI/4;
@@ -44,20 +61,22 @@
                 // 使用環境光
                 const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
 
-                return scene;
+                // 建立平面
+                const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:4, height:4});
+                // WebXR 支援
+                const xrPromise = scene.createDefaultXRExperienceAsync({
+                    floorMeshes: [ground]
+                });
+                return xrPromise.then((xrExperience) => {
+                    console.log('Done, WebXR is enabled.');
+                    return scene;
+                });
             }
 
-            // 待渲染的場景
+            // 修改回傳promise格式處理
             const sceneToRender = createScene();
-            // 調用engine的runRenderLoop
-            // 執行sceneToRender.render()，進行3D場景渲染
-            engine.runRenderLoop(function () {
-                sceneToRender.render();
-            });
-
-            // 觸發視窗大小改變時，呼叫engine.resize()重新調整畫面大小
-            window.addEventListener("resize", function(){
-                engine.resize();
+            createScene().then(sceneToRender => {
+                engine.runRenderLoop(() => sceneToRender.render());
             });
 
         </script>
