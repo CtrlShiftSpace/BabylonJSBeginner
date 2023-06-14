@@ -1,0 +1,65 @@
+<html>
+    <head>
+        <title>Babylon.js sample code</title>
+        <script src="babylon.js"></script>
+        <style>
+            body,#renderCanvas { width: 100%; height: 100%;}
+        </style>
+
+    </head>
+    <body>
+        <canvas id="renderCanvas"></canvas>
+
+        <script type="text/javascript">
+            // 定義畫布
+            const canvas = document.getElementById("renderCanvas");
+            // 初始化 BABYLON 3D 引擎
+            const engine = new BABYLON.Engine(canvas, true);
+
+            // 用來創建場景
+            const createScene = function() {
+                // 創建場景
+                const scene = new BABYLON.Scene(engine);
+                // 修改場景背景色
+                scene.clearColor = new BABYLON.Color3.Black;
+                // 也可使用以下方式改變顏色
+                // scene.clearColor = BABYLON.Color3.Blue();
+
+                // 建立立方體cube
+                const box = BABYLON.MeshBuilder.CreateBox("box", {});
+                box.position.x = 0.5;
+                box.position.y = 1;
+
+                // 定義攝影機參數
+                const alpha = Math.PI/4;
+                const beta = Math.PI/3;
+                const radius = 8;
+                const target = new BABYLON.Vector3(0,0,0);
+
+                // 建立攝影機
+                const camera = new BABYLON.ArcRotateCamera("Camera", alpha, beta, radius, target, scene);
+                camera.attachControl(canvas, true);
+
+                // 新增光線
+                // 使用環境光
+                const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
+
+                return scene;
+            }
+
+            // 待渲染的場景
+            const sceneToRender = createScene();
+            // 調用engine的runRenderLoop
+            // 執行sceneToRender.render()，進行3D場景渲染
+            engine.runRenderLoop(function () {
+                sceneToRender.render();
+            });
+
+            // 觸發視窗大小改變時，呼叫engine.resize()重新調整畫面大小
+            window.addEventListener("resize", function(){
+                engine.resize();
+            });
+
+        </script>
+    </body>
+</html>
